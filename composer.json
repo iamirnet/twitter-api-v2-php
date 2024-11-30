@@ -1,5 +1,5 @@
 {
-  "name": "noweh/twitter-api-v2-php",
+  "name": "iamirnet/twitter-api-v2-php",
   "description": "This library provides methods for sending messages to Twitter and receiving statuses.",
   "keywords": ["twitter", "PHP", "API"],
   "minimum-stability": "stable",
@@ -12,6 +12,12 @@
     }, {
       "name": "Martin Zeitler",
       "homepage": "https://github.com/syslogic"
+    },
+    {
+      "name" : "iamirnet",
+      "email" : "me@iamir.net",
+      "homepage": "https://iamir.net",
+      "role": "Developer"
     }
   ],
   "require": {
