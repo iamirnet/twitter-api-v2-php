@@ -81,7 +81,45 @@ abstract class AbstractController
     {
         return $this->api_base_uri;
     }
-    
+
+
+    /**
+     * Add Query Params Endpoint value
+     * @return string
+     */
+
+    public function addQueryParams($endpoint, $params) {
+        $parts = explode('?', $endpoint, 2);
+
+        $path = $parts[0];
+
+        $queryString = isset($parts[1]) ? $parts[1] : '';
+        $queryParams = [];
+
+        if ($queryString !== '') {
+            $pairs = explode('&', $queryString);
+            foreach ($pairs as $pair) {
+                $keyValue = explode('=', $pair, 2);
+                $key = urldecode($keyValue[0]);
+                $value = isset($keyValue[1]) ? urldecode($keyValue[1]) : '';
+                $queryParams[$key] = $value;
+            }
+        }
+
+        foreach ($params as $key => $value) {
+            $queryParams[$key] = $value;
+        }
+
+        $newQuery = [];
+        foreach ($queryParams as $key => $value) {
+            $newQuery[] = urlencode($key) . '=' . urlencode($value);
+        }
+
+        $newEndpoint = $path . (count($newQuery) > 0 ? '?' . implode('&', $newQuery) : '');
+
+        return $newEndpoint;
+    }
+
 
     /**
      * Perform the request to Twitter API
@@ -89,7 +127,7 @@ abstract class AbstractController
      * @return mixed
      * @throws \GuzzleHttp\Exception\GuzzleException|\RuntimeException|\JsonException
      */
-    public function performRequest(array $postData = [], $withHeaders = false)
+    public function performRequest(array $postData = [], $queryData = [], $withHeaders = false)
     {
         try {
             $headers = [
@@ -97,6 +135,10 @@ abstract class AbstractController
                 'Accept' => 'application/json'
             ];
 
+            $constructEndpoint = $this->constructEndpoint();
+            if (count($queryData)) {
+                $constructEndpoint = $this->addQueryParams($constructEndpoint, $queryData);
+            }
             if ($this->auth_mode === 0) { // Bearer Token
                 // Inject the Bearer token header
                 $client = new Client(['base_uri' => $this->getAPIBaseURI()]);
@@ -120,7 +162,7 @@ abstract class AbstractController
                 throw new \RuntimeException('OAuth 2.0 Authorization Code Flow had not been implemented & also requires user interaction.');
             }
 
-            $response  = $client->request($this->getHttpRequestMethod(), $this->constructEndpoint(), [
+            $response  = $client->request($this->getHttpRequestMethod(), $constructEndpoint, [
                 'verify' => !$this->is_windows(), // else composer script will break.
                 'headers' => $headers,
                 // This is always array from function spec, use count to see if data set.
